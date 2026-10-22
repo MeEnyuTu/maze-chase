@@ -13,12 +13,25 @@ app.get('/', (req, res) => {
 });
 
 const rooms = {};
+
 function getRoom(code) {
   if (!rooms[code]) {
     rooms[code] = { code, players: {}, monsterState: { rageMultiplier: 1.0, stunTimer: 0 } };
   }
   return rooms[code];
 }
+
+function broadcastRoomList() {
+  const list = [];
+  for (let code in rooms) {
+    const pCount = Object.keys(rooms[code].players).length;
+    if (pCount > 0) {
+      list.push({ code: code, count: pCount });
+    }
+  }
+  io.emit('roomListUpdate', list);
+}
+
 function leaveRoom(socket) {
   const code = socket.roomCode;
   if (!code) return;
@@ -28,20 +41,34 @@ function leaveRoom(socket) {
   if (!room) return;
   delete room.players[socket.id];
   socket.to(code).emit('playerLeft', socket.id);
+  
   if (Object.keys(room.players).length === 0) delete rooms[code];
+  broadcastRoomList(); 
 }
 
 io.on('connection', function(socket) {
+  broadcastRoomList();
+
   socket.on('joinRoom', function(data) {
     let code = String((data && data.code) || '').toUpperCase().trim() || 'PUBLIC';
     leaveRoom(socket);
     socket.join(code);
     socket.roomCode = code;
     const room = getRoom(code);
-    room.players[socket.id] = { id: socket.id, name: 'Player', x: 0, z: 0, yaw: 0 };
+    
+    room.players[socket.id] = { 
+      id: socket.id, 
+      name: 'Player', 
+      x: 0, z: 0, yaw: 0, 
+      isAdmin: !!data.isAdmin 
+    };
+    
     socket.emit('roomJoined', { code, players: room.players, monsterState: room.monsterState });
     socket.to(code).emit('playerJoined', room.players[socket.id]);
+    
+    broadcastRoomList();
   });
+  
   socket.on('playerMove', function(data) {
     const code = socket.roomCode;
     if (!code || !rooms[code] || !rooms[code].players[socket.id]) return;
@@ -50,12 +77,15 @@ io.on('connection', function(socket) {
     rooms[code].players[socket.id].yaw = data.yaw;
     socket.to(code).emit('playerMoved', rooms[code].players[socket.id]);
   });
+  
   socket.on('playerShoot', function(data) {
     if (socket.roomCode) socket.to(socket.roomCode).emit('playerShot', Object.assign({ id: socket.id }, data));
   });
+  
   socket.on('collectNotebook', function(notebookId) {
     if (socket.roomCode) io.to(socket.roomCode).emit('notebookCollected', { id: socket.id, notebookId });
   });
+  
   socket.on('hitMonster', function() {
     const code = socket.roomCode;
     if (!code || !rooms[code]) return;
@@ -65,7 +95,21 @@ io.on('connection', function(socket) {
     }
     io.to(code).emit('monsterSynced', rooms[code].monsterState);
   });
-  socket.on('disconnect', function() { leaveRoom(socket); });
+
+  socket.on('hitPlayer', function(targetId) {
+    const code = socket.roomCode;
+    if (!code) return;
+    io.to(code).emit('playerStunned', { targetId: targetId });
+  });
+
+  // ★ 新增：客户端主动离开房间
+  socket.on('leaveRoom', function() {
+    leaveRoom(socket);
+  });
+  
+  socket.on('disconnect', function() { 
+    leaveRoom(socket); 
+  });
 });
 
 server.listen(3000, function() {
