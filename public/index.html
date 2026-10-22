@@ -64,7 +64,7 @@ canvas#gameCanvas{display:block;width:100%;height:100%}
 .lobby-count { font-size: 14px; color: #8fe07a; margin-left: 15px; }
 .lobby-join-btn { background: #00ffcc; color: #000; border: none; padding: 6px 15px; font-weight: bold; font-family: inherit; cursor: pointer; border-radius: 3px; letter-spacing: 1px; }
 .lobby-join-btn:hover { background: #fff; }
-.screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:30;background:radial-gradient(circle at 50% 40%,rgba(20,50,35,.4),rgba(0,0,0,.93) 75%),#050a06;text-align:center;padding:20px}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:30;background:radial-gradient(circle at 50% 40%,rgba(20,50,35,.4),rgba(0,0,0,.93) 75%),#050a06;text-align:center;padding:20px; overflow-y: auto;}
 .screen.hidden{display:none}
 .screen h1{font-size:62px;letter-spacing:10px;color:#c9f0a8;text-shadow:0 0 12px rgba(120,255,140,.8),0 0 40px rgba(80,200,90,.5);margin-bottom:6px}
 .screen h2{font-size:22px;letter-spacing:6px;color:#7fc98f;margin-bottom:34px;font-weight:normal}
@@ -73,9 +73,9 @@ canvas#gameCanvas{display:block;width:100%;height:100%}
 .btn{margin-top:20px;padding:15px 54px;font-size:20px;font-family:inherit;letter-spacing:5px;color:#0b1a10;background:#8fe07a;border:none;border-radius:5px;cursor:pointer;font-weight:bold;box-shadow:0 6px 0 #4c8a3e;pointer-events:auto;transition:transform .12s}
 .btn:hover{background:#a8f594;transform:translateY(-2px)}
 .btn:active{transform:translateY(4px);box-shadow:0 2px 0 #4c8a3e}
-.btn-secondary{background:#5a6a5a;color:#d8e8d0;box-shadow:0 6px 0 #2c3a2c; margin-top:15px; font-size:16px; padding:12px 40px;}
-.btn-secondary:hover{background:#7a8a7a;}
-.btn-secondary:active{box-shadow:0 2px 0 #2c3a2c;}
+.btn-danger{background:#ff5555;color:#fff;box-shadow:0 6px 0 #aa2222; font-size:18px; padding:14px 40px; margin-top:15px; border:2px solid #ffaaaa;}
+.btn-danger:hover{background:#ff7777;}
+.btn-danger:active{box-shadow:0 2px 0 #aa2222;}
 .diffBtn{padding:14px 40px;font-size:17px;font-family:inherit;letter-spacing:4px;color:#d6f5c0;background:rgba(40,80,50,.4);border:2px solid #4d8a5c;border-radius:5px;cursor:pointer;font-weight:bold;margin:8px;transition:all .15s}
 .diffBtn:hover{background:rgba(60,120,70,.6)}
 .diffBtn.selected{background:#8fe07a;color:#0b1a10;border-color:#8fe07a}
@@ -169,15 +169,16 @@ canvas#gameCanvas{display:block;width:100%;height:100%}
 </div>
 <div id="pauseScreen" class="screen hidden">
   <h1 style="font-size:44px" id="pauseTitle">PAUSED</h1>
-  <h2 id="pauseHint">Click to continue</h2>
-  <button class="btn btn-secondary" id="pauseLobbyBtn">返回大厅</button>
+  <h2 id="pauseHint">Click anywhere to continue</h2>
+  <!-- ★ 新增：超大号红色退出按钮 -->
+  <button class="btn btn-danger" id="pauseLobbyBtn">返 回 大 厅</button>
 </div>
 <div id="endScreen" class="screen hidden">
   <h1 id="endTitle" class="win">YOU ESCAPED</h1>
   <h2 id="endSubtitle">ESCAPED</h2>
   <div id="endStats"></div>
   <button class="btn" id="restartBtn">RESTART</button>
-  <button class="btn btn-secondary" id="endLobbyBtn">返回大厅</button>
+  <button class="btn btn-danger" id="endLobbyBtn">返回大厅</button>
 </div>
 <div id="scanlines"></div>
 
@@ -189,8 +190,8 @@ canvas#gameCanvas{display:block;width:100%;height:100%}
 var I18N = {
   current: 'en',
   t: {
-    en: { subtitle: 'MAZE CHASE', introText1: 'You wake up in an abandoned school.', introText2: 'The sound of a ruler tapping the walls echoes through the corridors.', introText3: 'Something is slowly approaching you.', introText4: 'Collect all <strong style="color:#ffe066">7 notebooks</strong>, then escape.', keyMapLabel: 'Open map', keySafeLabel: 'Open safe', gunHintText: 'The safe contains shotgun shells. Left-click to stun it for 30 seconds.', diffLabel: '— DIFFICULTY —', easyBtn: 'EASY (1 monster)', mediumBtn: 'MEDIUM (2 monsters)', roomLabel: '— ONLINE ROOM —', roomPlaceholder: 'ROOM CODE', roomRandom: '🎲 Random', roomHint: 'Players with the same room code enter the same maze', startBtn: 'START', hudNotebooks: 'Notebooks', hudShots: 'shots', hudOnline: 'Online', modeSingle: '⚪ Single Player', modeOnline: '🟢 Online', warning: "⚠ IT'S NEARBY ⚠", pressE: 'Press E to open safe', promptMove: 'Move', promptLook: 'Look', promptShoot: 'Shoot', promptMap: 'Map', promptSprint: 'Sprint', paused: 'PAUSED', pauseHint: 'Click to continue', winTitle: 'YOU ESCAPED', winSub: 'ESCAPED', loseTitle: 'YOU WERE CAUGHT', loseSub: 'The ruler has fallen', endStats1: 'Notebooks: ', endStats2: 'Time: ', endWinMsg: 'The footsteps behind you finally stopped.', endLoseMsg: 'It was waiting for you to make a mistake.', restartBtn: 'RESTART', safeTitle: 'SAFE', safeSub: 'ENTER CODE', safeHint: 'Numbers · Enter to submit · ESC to cancel', safeWrong: '✗ Wrong code', safeRight: '✓ Unlocked', safeGet: 'Got ', safeShells: ' shells', mapTitle: 'SCHOOL MAP', mapHint: 'Release M to close map', collectToast: 'Notebook +1', noAmmo: 'Out of ammo…', stunToast: 'Monster stunned for 30 seconds', rageToast: 'IT RAGED! ×', startToast: 'Collect 7 notebooks…', startToastSingle: 'Single Player · Collect 7 notebooks…' },
-    zh: { subtitle: '迷 宫 追 逐', introText1: '你在一所废弃的学校里醒来。', introText2: '走廊里回荡着尺子敲击墙壁的声音。', introText3: '有个东西正在慢慢地靠近你。', introText4: '收集全部 <strong style="color:#ffe066">7 本笔记本</strong>，然后逃出去。', keyMapLabel: '打开地图', keySafeLabel: '打开保险箱', gunHintText: '保险箱里有霰弹枪子弹，左键射击可以眩晕它 30 秒。', diffLabel: '— 选 择 难 度 —', easyBtn: '简 单 (1 怪)', mediumBtn: '中 等 (2 怪)', roomLabel: '— 联 机 房 间 —', roomPlaceholder: '房间代码', roomRandom: '🎲 随机', roomHint: '同一个房间代码的玩家会进入同一个迷宫', startBtn: '开 始', hudNotebooks: '笔记本', hudShots: '发', hudOnline: '在线', modeSingle: '⚪ 单机模式', modeOnline: '🟢 联机模式', warning: '⚠ 它 就 在 附 近 ⚠', pressE: '按 E 打开保险箱', promptMove: '移动', promptLook: '鼠标 转向', promptShoot: '左键 射击', promptMap: '地图', promptSprint: '冲刺', paused: '已 暂 停', pauseHint: '点击屏幕继续', winTitle: '你 逃 出 来 了', winSub: '逃 脱 成 功', loseTitle: '你 被 抓 住 了', loseSub: '尺 子 落 下 的 声 音', endStats1: '收集笔记本：', endStats2: '用时：', endWinMsg: '身后的脚步声，终于停下了。', endLoseMsg: '它一直在等你犯错。', restartBtn: '再 来 一 次', safeTitle: '保 险 箱', safeSub: '解 锁 密 码', safeHint: '输入数字 · 回车提交 · ESC 取消', safeWrong: '✗ 密码错误', safeRight: '✓ 解锁成功', safeGet: '获得 ', safeShells: ' 发霰弹', mapTitle: '校 园 平 面 图', mapHint: '松开 M 收起地图', collectToast: '笔记本 +1', noAmmo: '没有子弹了…', stunToast: '怪物被眩晕了 30 秒', rageToast: '它 发 怒 了 ！ ×', startToast: '收集 7 本笔记本…', startToastSingle: '单机模式 · 收集 7 本笔记本…' }
+    en: { subtitle: 'MAZE CHASE', introText1: 'You wake up in an abandoned school.', introText2: 'The sound of a ruler tapping the walls echoes through the corridors.', introText3: 'Something is slowly approaching you.', introText4: 'Collect all <strong style="color:#ffe066">7 notebooks</strong>, then escape.', keyMapLabel: 'Open map', keySafeLabel: 'Open safe', gunHintText: 'The safe contains shotgun shells. Left-click to stun it for 30 seconds.', diffLabel: '— DIFFICULTY —', easyBtn: 'EASY (1 monster)', mediumBtn: 'MEDIUM (2 monsters)', roomLabel: '— ONLINE ROOM —', roomPlaceholder: 'ROOM CODE', roomRandom: '🎲 Random', roomHint: 'Players with the same room code enter the same maze', startBtn: 'START', hudNotebooks: 'Notebooks', hudShots: 'shots', hudOnline: 'Online', modeSingle: '⚪ Single Player', modeOnline: '🟢 Online', warning: "⚠ IT'S NEARBY ⚠", pressE: 'Press E to open safe', promptMove: 'Move', promptLook: 'Look', promptShoot: 'Shoot', promptMap: 'Map', promptSprint: 'Sprint', paused: 'PAUSED', pauseHint: 'Click anywhere to continue', winTitle: 'YOU ESCAPED', winSub: 'ESCAPED', loseTitle: 'YOU WERE CAUGHT', loseSub: 'The ruler has fallen', endStats1: 'Notebooks: ', endStats2: 'Time: ', endWinMsg: 'The footsteps behind you finally stopped.', endLoseMsg: 'It was waiting for you to make a mistake.', restartBtn: 'RESTART', safeTitle: 'SAFE', safeSub: 'ENTER CODE', safeHint: 'Numbers · Enter to submit · ESC to cancel', safeWrong: '✗ Wrong code', safeRight: '✓ Unlocked', safeGet: 'Got ', safeShells: ' shells', mapTitle: 'SCHOOL MAP', mapHint: 'Release M to close map', collectToast: 'Notebook +1', noAmmo: 'Out of ammo…', stunToast: 'Monster stunned for 30 seconds', rageToast: 'IT RAGED! ×', startToast: 'Collect 7 notebooks…', startToastSingle: 'Single Player · Collect 7 notebooks…' },
+    zh: { subtitle: '迷 宫 追 逐', introText1: '你在一所废弃的学校里醒来。', introText2: '走廊里回荡着尺子敲击墙壁的声音。', introText3: '有个东西正在慢慢地靠近你。', introText4: '收集全部 <strong style="color:#ffe066">7 本笔记本</strong>，然后逃出去。', keyMapLabel: '打开地图', keySafeLabel: '打开保险箱', gunHintText: '保险箱里有霰弹枪子弹，左键射击可以眩晕它 30 秒。', diffLabel: '— 选 择 难 度 —', easyBtn: '简 单 (1 怪)', mediumBtn: '中 等 (2 怪)', roomLabel: '— 联 机 房 间 —', roomPlaceholder: '房间代码', roomRandom: '🎲 随机', roomHint: '同一个房间代码的玩家会进入同一个迷宫', startBtn: '开 始', hudNotebooks: '笔记本', hudShots: '发', hudOnline: '在线', modeSingle: '⚪ 单机模式', modeOnline: '🟢 联机模式', warning: '⚠ 它 就 在 附 近 ⚠', pressE: '按 E 打开保险箱', promptMove: '移动', promptLook: '鼠标 转向', promptShoot: '左键 射击', promptMap: '地图', promptSprint: '冲刺', paused: '已 暂 停', pauseHint: '点击任意处继续游戏', winTitle: '你 逃 出 来 了', winSub: '逃 脱 成 功', loseTitle: '你 被 抓 住 了', loseSub: '尺 子 落 下 的 声 音', endStats1: '收集笔记本：', endStats2: '用时：', endWinMsg: '身后的脚步声，终于停下了。', endLoseMsg: '它一直在等你犯错。', restartBtn: '再 来 一 次', safeTitle: '保 险 箱', safeSub: '解 锁 密 码', safeHint: '输入数字 · 回车提交 · ESC 取消', safeWrong: '✗ 密码错误', safeRight: '✓ 解锁成功', safeGet: '获得 ', safeShells: ' 发霰弹', mapTitle: '校 园 平 面 图', mapHint: '松开 M 收起地图', collectToast: '笔记本 +1', noAmmo: '没有子弹了…', stunToast: '怪物被眩晕了 30 秒', rageToast: '它 发 怒 了 ！ ×', startToast: '收集 7 本笔记本…', startToastSingle: '单机模式 · 收集 7 本笔记本…' }
   }
 };
 
@@ -849,7 +850,7 @@ function closeAdminModal(){
 function submitAdminPassword(){
   if (Game.adminInput === 'admin') {
     Game.isAdmin = true;
-    sessionStorage.setItem('mazeAdminMode', 'true'); // ★ 改为 sessionStorage，隔离标签页
+    sessionStorage.setItem('mazeAdminMode', 'true'); 
     adminFeedbackEl.textContent = '✓ ACCESS GRANTED';
     adminFeedbackEl.style.color = '#00ffcc';
     SoundFX.adminSuccess();
@@ -977,7 +978,6 @@ var clock = null;
 function startGame(){
   Game.state = 'playing'; Game.time = 0; Game.notebooksFound = 0; Game.mapOpen = false; Game.ammo = 0; Game.battery = 100; Game.isStunned = false; 
   
-  // ★ 改为读取 sessionStorage
   Game.isAdmin = sessionStorage.getItem('mazeAdminMode') === 'true';
   if (Game.isAdmin) {
     adminBadge.style.display = 'inline';
@@ -1010,7 +1010,6 @@ function startGame(){
   }
 }
 
-// ★ 修复返回大厅逻辑：主动通知服务器清理房间，刷新大厅
 function returnToLobby() {
   Game.state = 'menu';
   Game.isEasterEgg = false;
@@ -1018,7 +1017,7 @@ function returnToLobby() {
   clearOtherPlayers();
   
   if (socket) {
-    safeEmit('leaveRoom'); // 告诉服务器我退出了
+    safeEmit('leaveRoom');
     socket.disconnect();
     socket.connect();
   }
