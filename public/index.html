@@ -332,9 +332,6 @@ camera.add(flashlight); camera.add(flashlight.target);
 var fillLight = new THREE.PointLight(0x5080c0, 0.2, 32, 2); scene.add(fillLight);
 var wallTex = makeWallTexture(), floorTex = makeFloorTexture(), ceilTex = makeCeilTexture();
 var mazeGroup = new THREE.Group(); scene.add(mazeGroup);
-
-// ★ 新增：逃生门专用组
-var doorGroup = new THREE.Group(); scene.add(doorGroup);
 var exitDoorMesh = null;
 
 function buildMazeMeshes(){
@@ -345,6 +342,58 @@ function buildMazeMeshes(){
   for(var z=0;z<MH;z++) for(var x=0;x<MW;x++){ if(grid[z][x]!==1) continue; var m = new THREE.Mesh(wallGeo, wallMat); var p = gridToWorld(x,z); m.position.set(p.x, CONFIG.WALL_HEIGHT/2, p.z); mazeGroup.add(m); }
   var lampGeo = new THREE.BoxGeometry(2.2,0.12,0.5); var lampMat = new THREE.MeshBasicMaterial({ color:0xe8f0c0 });
   for(var i=0;i<14;i++){ var gx=randInt(1,MW-2), gz=randInt(1,MH-2); if(grid[gz][gx]===1) continue; var lamp = new THREE.Mesh(lampGeo, lampMat); var p2 = gridToWorld(gx,gz); lamp.position.set(p2.x, CONFIG.WALL_HEIGHT-0.12, p2.z); mazeGroup.add(lamp); }
+}
+
+// ★ 生成逃生门
+function spawnExitDoor() {
+  if(exitDoorMesh) scene.remove(exitDoorMesh);
+  exitDoorMesh = new THREE.Group();
+
+  // 找出生点 (1,1) 附近的空地
+  let doorGx = 1, doorGz = 1;
+  if (grid[1][2] === 0) { doorGx = 1; doorGz = 2; }       // 南边
+  else if (grid[2][1] === 0) { doorGx = 2; doorGz = 1; }  // 东边
+  else if (grid[2][2] === 0) { doorGx = 2; doorGz = 2; }  // 东南
+  
+  const doorPos = gridToWorld(doorGx, doorGz);
+  
+  // 黑色门框
+  const frameMat = new THREE.MeshLambertMaterial({ color: 0x111111 });
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(2.0, 3.4, 0.2), frameMat);
+  frame.position.y = 1.7;
+  exitDoorMesh.add(frame);
+
+  // 发光的传送门表面
+  const doorMat = new THREE.MeshBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.85 });
+  const door = new THREE.Mesh(new THREE.BoxGeometry(1.8, 3.2, 0.1), doorMat);
+  door.position.set(0, 1.6, 0.05);
+  exitDoorMesh.add(door);
+
+  // 门上方的 EXIT 绿色标牌
+  const signMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc });
+  const sign = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.3, 0.15), signMat);
+  sign.position.set(0, 3.55, 0.1);
+  exitDoorMesh.add(sign);
+
+  // 强烈的绿色光源，照亮周围
+  const signLight = new THREE.PointLight(0x00ff88, 5.0, 12);
+  signLight.position.set(0, 3.0, 1.0);
+  exitDoorMesh.add(signLight);
+
+  exitDoorMesh.position.copy(doorPos);
+  
+  // 让门面向出生点 (1,1)
+  const center = gridToWorld(1,1);
+  const angle = Math.atan2(center.x - doorPos.x, center.z - doorPos.z);
+  exitDoorMesh.rotation.y = angle;
+
+  scene.add(exitDoorMesh);
+
+  // ★ 核心修复：强制玩家视线看向门
+  // Three.js 的 yaw 角度：yaw = Math.atan2(-dx, -dz)
+  const dx = doorPos.x - center.x;
+  const dz = doorPos.z - center.z;
+  player.yaw = Math.atan2(-dx, -dz); 
 }
 
 /* ============================================================
@@ -465,42 +514,9 @@ function setupSocketListeners(){
 var player = { pos: new THREE.Vector3(), yaw: 0, pitch: 0, bobPhase: 0, bobAmount: 0, moving: false, sprinting: false };
 function spawnPlayer(){
   var p = gridToWorld(1,1); player.pos.set(p.x, 0, p.z);
-  var chosenYaw = 0; if(grid[1][2] === 0) chosenYaw = -Math.PI/2; else if(grid[2][1] === 0) chosenYaw = Math.PI; else if(grid[2][2] === 0) chosenYaw = Math.PI * 0.75; else if(grid[1][0] === 0) chosenYaw = Math.PI/2;
-  player.yaw = chosenYaw; player.pitch = 0; player.bobPhase = 0; player.bobAmount = 0;
+  player.yaw = 0; player.pitch = 0; player.bobPhase = 0; player.bobAmount = 0;
 }
 var gunGroup = null, muzzleLight = null;
-
-// ★ 新增：生成逃生门
-function spawnExitDoor() {
-  if(exitDoorMesh) scene.remove(exitDoorMesh);
-  exitDoorMesh = new THREE.Group();
-
-  // 门框
-  var frameMat = new THREE.MeshLambertMaterial({ color: 0x222222 });
-  var frame = new THREE.Mesh(new THREE.BoxGeometry(1.8, 3.2, 0.2), frameMat);
-  frame.position.y = 1.6;
-  exitDoorMesh.add(frame);
-
-  // 门板（发光绿色）
-  var doorMat = new THREE.MeshLambertMaterial({ color: 0x00ff88, emissive: 0x005522, emissiveIntensity: 0.8 });
-  var door = new THREE.Mesh(new THREE.BoxGeometry(1.6, 3.0, 0.1), doorMat);
-  door.position.set(0, 1.5, 0.1);
-  exitDoorMesh.add(door);
-
-  // EXIT 标牌光晕
-  var signLight = new THREE.PointLight(0x00ff88, 2.0, 6);
-  signLight.position.set(0, 3.2, 0.5);
-  exitDoorMesh.add(signLight);
-
-  // 放到固定的位置 (1, 3) 保证靠近出生点但不在原地
-  var doorPos = gridToWorld(1, 3);
-  exitDoorMesh.position.copy(doorPos);
-  
-  // 让门面向 Z 轴正方向
-  exitDoorMesh.rotation.y = 0;
-
-  scene.add(exitDoorMesh);
-}
 
 function createShotgunModel(){
   var g = new THREE.Group();
@@ -1055,7 +1071,7 @@ function startGame(){
   puzzleModal.classList.remove('open'); mapOverlay.classList.remove('open'); toastEl.classList.remove('show'); document.getElementById('stunOverlay').style.opacity = '0'; adminModal.classList.remove('open');
   generateMaze(); buildMazeMeshes(); resetExplored(); spawnPlayer(); updateExplored(); spawnNotebooks(); spawnBatteries(); spawnSafes(); spawnMonsters();
   
-  // ★ 生成门
+  // ★ 生成门（必须放在 spawnPlayer 之后）
   spawnExitDoor();
   
   camera.position.set(player.pos.x, CONFIG.EYE_HEIGHT, player.pos.z); camera.rotation.set(0, player.yaw, 0);
