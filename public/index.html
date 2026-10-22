@@ -170,7 +170,6 @@ canvas#gameCanvas{display:block;width:100%;height:100%}
 <div id="pauseScreen" class="screen hidden">
   <h1 style="font-size:44px" id="pauseTitle">PAUSED</h1>
   <h2 id="pauseHint">Click anywhere to continue</h2>
-  <!-- ★ 新增：超大号红色退出按钮 -->
   <button class="btn btn-danger" id="pauseLobbyBtn">返 回 大 厅</button>
 </div>
 <div id="endScreen" class="screen hidden">
@@ -334,6 +333,10 @@ var fillLight = new THREE.PointLight(0x5080c0, 0.2, 32, 2); scene.add(fillLight)
 var wallTex = makeWallTexture(), floorTex = makeFloorTexture(), ceilTex = makeCeilTexture();
 var mazeGroup = new THREE.Group(); scene.add(mazeGroup);
 
+// ★ 新增：逃生门专用组
+var doorGroup = new THREE.Group(); scene.add(doorGroup);
+var exitDoorMesh = null;
+
 function buildMazeMeshes(){
   while(mazeGroup.children.length>0){ var ch=mazeGroup.children.pop(); if(ch.geometry) ch.geometry.dispose(); if(ch.material){ if(Array.isArray(ch.material)) ch.material.forEach(function(m){m.dispose();}); else ch.material.dispose(); } }
   var floorMat = new THREE.MeshLambertMaterial({ map: floorTex }); floorTex.repeat.set(MW, MH); var floor = new THREE.Mesh(new THREE.PlaneGeometry(WORLD_W, WORLD_H), floorMat); floor.rotation.x = -Math.PI/2; mazeGroup.add(floor);
@@ -466,6 +469,38 @@ function spawnPlayer(){
   player.yaw = chosenYaw; player.pitch = 0; player.bobPhase = 0; player.bobAmount = 0;
 }
 var gunGroup = null, muzzleLight = null;
+
+// ★ 新增：生成逃生门
+function spawnExitDoor() {
+  if(exitDoorMesh) scene.remove(exitDoorMesh);
+  exitDoorMesh = new THREE.Group();
+
+  // 门框
+  var frameMat = new THREE.MeshLambertMaterial({ color: 0x222222 });
+  var frame = new THREE.Mesh(new THREE.BoxGeometry(1.8, 3.2, 0.2), frameMat);
+  frame.position.y = 1.6;
+  exitDoorMesh.add(frame);
+
+  // 门板（发光绿色）
+  var doorMat = new THREE.MeshLambertMaterial({ color: 0x00ff88, emissive: 0x005522, emissiveIntensity: 0.8 });
+  var door = new THREE.Mesh(new THREE.BoxGeometry(1.6, 3.0, 0.1), doorMat);
+  door.position.set(0, 1.5, 0.1);
+  exitDoorMesh.add(door);
+
+  // EXIT 标牌光晕
+  var signLight = new THREE.PointLight(0x00ff88, 2.0, 6);
+  signLight.position.set(0, 3.2, 0.5);
+  exitDoorMesh.add(signLight);
+
+  // 放到固定的位置 (1, 3) 保证靠近出生点但不在原地
+  var doorPos = gridToWorld(1, 3);
+  exitDoorMesh.position.copy(doorPos);
+  
+  // 让门面向 Z 轴正方向
+  exitDoorMesh.rotation.y = 0;
+
+  scene.add(exitDoorMesh);
+}
 
 function createShotgunModel(){
   var g = new THREE.Group();
@@ -710,6 +745,14 @@ function drawMap(){
     }
   }
 
+  // 在大厅画一个门
+  if (exitDoorMesh) {
+    var ep = exitDoorMesh.position; var eg = worldToGrid(ep.x, ep.z);
+    var ecx = toPx(eg.gx) + cw*0.5, ecy = toPy(eg.gz) + ch*0.5;
+    g.beginPath(); g.arc(ecx, ecy, cw*0.4, 0, Math.PI*2); g.fillStyle = '#00ff88'; g.fill();
+    g.strokeStyle = '#fff'; g.lineWidth = 2; g.stroke();
+  }
+
   var ppg = worldToGrid(player.pos.x, player.pos.z), ppgx = clamp(ppg.gx,0,MW-1), ppgz = clamp(ppg.gz,0,MH-1);
   var pcx = toPx(ppgx) + cw*0.5, pcy = toPy(ppgz) + ch*0.5, mapAngle = Math.atan2(-Math.cos(player.yaw), -Math.sin(player.yaw)), fanR = cw*3.6;
   g.beginPath(); g.moveTo(pcx,pcy); g.arc(pcx,pcy,fanR,mapAngle-0.55,mapAngle+0.55); g.closePath();
@@ -749,6 +792,7 @@ document.addEventListener('keydown', function(e){
   if(e.code === 'KeyM' && Game.state === 'playing' && !Game.mapOpen){ Game.mapOpen = true; mapOverlay.classList.add('open'); SoundFX.mapOpen(); }
   if(e.code === 'KeyE' && Game.state === 'playing' && Game.nearbySafe){ 
     if (Game.isEasterEgg) { openAdminModal(); } 
+    else if (Game.nearbySafe.isExitDoor) { returnToLobby(); }
     else { openPuzzle(Game.nearbySafe); } 
   }
   if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].indexOf(e.code) >= 0) e.preventDefault();
@@ -791,6 +835,8 @@ function hitMonster(m){
   else showToast(T('stunToast'), 1.8);
   safeEmit('hitMonster', {});
 }
+
+// ★ 修改：加入门的距离判定
 function updateSafes(dt){ 
   Game.nearbySafe = null; 
   if (Game.isEasterEgg) {
@@ -808,6 +854,19 @@ function updateSafes(dt){
     return; 
   }
 
+  // 检查是否靠近逃生门
+  if (exitDoorMesh) {
+    var dx = exitDoorMesh.position.x - player.pos.x;
+    var dz = exitDoorMesh.position.z - player.pos.z;
+    if (Math.hypot(dx, dz) < 2.5) {
+      interactPrompt.textContent = "按 E 推开大门离开 (返回大厅)";
+      interactPrompt.style.opacity = '1';
+      Game.nearbySafe = { isExitDoor: true };
+      return;
+    }
+  }
+
+  // 检查保险箱
   var bestDist = CONFIG.GUN.SAFE_INTERACT; 
   for(var i=0;i<safes.length;i++){ 
     var s = safes[i]; 
@@ -816,6 +875,9 @@ function updateSafes(dt){
     if(d < bestDist){ bestDist = d; Game.nearbySafe = s; } 
   } 
   interactPrompt.style.opacity = Game.nearbySafe ? '1' : '0'; 
+  if(Game.nearbySafe && !Game.nearbySafe.isConsole && !Game.nearbySafe.isExitDoor) {
+    interactPrompt.textContent = "按 E 打开保险箱";
+  }
 }
 
 function openPuzzle(safe){ if(!safe || safe.opened || Game.state !== 'playing') return; Game.currentSafe = safe; Game.puzzleInput = ''; Game.puzzleResolving = false; Game.puzzleQuestion = generateMathQuestion(); puzzleEqEl.textContent = Game.puzzleQuestion.text + ' = ?'; puzzleInputEl.textContent = '_'; puzzleFeedbackEl.textContent = ''; interactPrompt.style.opacity = '0'; puzzleModal.classList.add('open'); Game.state = 'puzzle'; if(document.pointerLockElement === canvas) document.exitPointerLock(); }
@@ -992,6 +1054,10 @@ function startGame(){
   
   puzzleModal.classList.remove('open'); mapOverlay.classList.remove('open'); toastEl.classList.remove('show'); document.getElementById('stunOverlay').style.opacity = '0'; adminModal.classList.remove('open');
   generateMaze(); buildMazeMeshes(); resetExplored(); spawnPlayer(); updateExplored(); spawnNotebooks(); spawnBatteries(); spawnSafes(); spawnMonsters();
+  
+  // ★ 生成门
+  spawnExitDoor();
+  
   camera.position.set(player.pos.x, CONFIG.EYE_HEIGHT, player.pos.z); camera.rotation.set(0, player.yaw, 0);
   
   updateAmmoDisplay(); 
@@ -1032,6 +1098,12 @@ function returnToLobby() {
   mapOverlay.classList.remove('open');
   flashlight.color.setHex(0xffe9b0);
   adminBadge.style.display = 'none';
+  
+  // 清理门
+  if(exitDoorMesh) {
+    scene.remove(exitDoorMesh);
+    exitDoorMesh = null;
+  }
 }
 
 startBtn.addEventListener('click', function(){ SoundFX.init(); SoundFX.resume(); requestLock(); startGame(); });
