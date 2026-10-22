@@ -65,7 +65,6 @@ io.on('connection', function(socket) {
     
     socket.emit('roomJoined', { code, players: room.players, monsterState: room.monsterState });
     socket.to(code).emit('playerJoined', room.players[socket.id]);
-    
     broadcastRoomList();
   });
   
@@ -102,7 +101,6 @@ io.on('connection', function(socket) {
     io.to(code).emit('playerStunned', { targetId: targetId });
   });
 
-  // ★ 新增：客户端主动离开房间
   socket.on('leaveRoom', function() {
     leaveRoom(socket);
   });
