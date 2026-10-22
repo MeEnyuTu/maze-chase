@@ -133,7 +133,7 @@ canvas#gameCanvas{display:block;width:100%;height:100%}
     <div id="adminSubtitle">DEVELOPER CONSOLE</div>
     <div id="adminInput">_</div>
     <div id="adminFeedback"></div>
-    <div id="adminHint">Enter password · ESC to cancel</div>
+    <div id="adminHint">Enter password · type "exit" to return to lobby · ESC to cancel</div>
   </div>
 </div>
 <div id="startScreen" class="screen">
@@ -344,9 +344,13 @@ function buildMazeMeshes(){
   for(var i=0;i<14;i++){ var gx=randInt(1,MW-2), gz=randInt(1,MH-2); if(grid[gz][gx]===1) continue; var lamp = new THREE.Mesh(lampGeo, lampMat); var p2 = gridToWorld(gx,gz); lamp.position.set(p2.x, CONFIG.WALL_HEIGHT-0.12, p2.z); mazeGroup.add(lamp); }
 }
 
-// ★ 生成逃生门（加强版，必定在玩家面前）
+// ★ 生成逃生门（普通房间使用；彩蛋房不生成，改用控制台输入 exit 离开）
 function spawnExitDoor() {
-  if(exitDoorMesh) scene.remove(exitDoorMesh);
+  if(exitDoorMesh) { scene.remove(exitDoorMesh); exitDoorMesh = null; }
+
+  // ★ 彩蛋房不生成出口门
+  if (Game.isEasterEgg) return;
+
   exitDoorMesh = new THREE.Group();
 
   // 暴力保证出生点周围有路给门放
@@ -753,7 +757,7 @@ function drawMap(){
     }
   }
 
-  // 在大厅画一个门
+  // 在大厅画一个门（普通房间才有，彩蛋房时 exitDoorMesh 为 null 自动跳过）
   if (exitDoorMesh) {
     var ep = exitDoorMesh.position; var eg = worldToGrid(ep.x, ep.z);
     var ecx = toPx(eg.gx) + cw*0.5, ecy = toPy(eg.gz) + ch*0.5;
@@ -917,6 +921,20 @@ function closeAdminModal(){
   showScreen('pause');
 }
 function submitAdminPassword(){
+  // ★ 彩蛋房离开方式：在控制台输入 exit，回车返回初始大厅
+  if (Game.adminInput === 'exit') {
+    adminFeedbackEl.textContent = '✓ EXITING...';
+    adminFeedbackEl.style.color = '#00ffcc';
+    SoundFX.adminSuccess();
+    Game.adminInput = '';
+    setTimeout(function(){
+      adminModal.classList.remove('open');
+      if (document.pointerLockElement === canvas) document.exitPointerLock();
+      returnToLobby();
+    }, 350);
+    return;
+  }
+
   if (Game.adminInput === 'admin') {
     Game.isAdmin = true;
     sessionStorage.setItem('mazeAdminMode', 'true'); 
@@ -1062,7 +1080,7 @@ function startGame(){
   puzzleModal.classList.remove('open'); mapOverlay.classList.remove('open'); toastEl.classList.remove('show'); document.getElementById('stunOverlay').style.opacity = '0'; adminModal.classList.remove('open');
   generateMaze(); buildMazeMeshes(); resetExplored(); spawnPlayer(); updateExplored(); spawnNotebooks(); spawnBatteries(); spawnSafes(); spawnMonsters();
   
-  // ★ 强制生成门并校准视角
+  // ★ 生成出口门（彩蛋房时函数内部会直接返回，不生成）
   spawnExitDoor();
   
   camera.position.set(player.pos.x, CONFIG.EYE_HEIGHT, player.pos.z); camera.rotation.set(0, player.yaw, 0);
