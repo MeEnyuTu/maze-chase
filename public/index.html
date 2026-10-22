@@ -13,11 +13,13 @@ canvas#gameCanvas{display:block;width:100%;height:100%}
 #crosshair::before,#crosshair::after{content:"";position:absolute;background:#fff}
 #crosshair::before{left:50%;top:0;width:2px;height:100%;transform:translateX(-50%)}
 #crosshair::after{top:50%;left:0;height:2px;width:100%;transform:translateY(-50%)}
-#topBar{position:absolute;top:18px;left:50%;transform:translateX(-50%);display:flex;gap:26px;align-items:center;padding:10px 24px;background:rgba(8,16,10,.72);border:2px solid #2c5c3a;border-radius:6px;font-size:17px;letter-spacing:1px}
+#topBar{position:absolute;top:18px;left:50%;transform:translateX(-50%);display:flex;gap:20px;align-items:center;padding:10px 24px;background:rgba(8,16,10,.72);border:2px solid #2c5c3a;border-radius:6px;font-size:17px;letter-spacing:1px}
 #nbCount{color:#ffe066;font-weight:bold}
 #ammoDisplay{color:#ffb060;font-weight:bold}
 #ammoDisplay.empty{color:#884444}
 #ammoDisplay.admin{color:#ffd700;text-shadow:0 0 10px #ffd700}
+#exitRoomBtn { pointer-events: auto; background: transparent; color: #ff5555; border: 1px solid #ff5555; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-family: inherit; font-weight: bold; font-size: 14px; letter-spacing: 2px; transition: all 0.2s; }
+#exitRoomBtn:hover { background: #ff5555; color: #000; }
 #warning{position:absolute;bottom:92px;left:50%;transform:translateX(-50%);font-size:22px;font-weight:bold;color:#ff4d4d;text-shadow:0 0 14px rgba(255,40,40,.9);opacity:0;transition:opacity .25s;letter-spacing:3px}
 #prompt{position:absolute;bottom:46px;left:50%;transform:translateX(-50%);font-size:15px;color:#b7d8c0;opacity:.75;letter-spacing:1px;text-align:center}
 #toast{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(.8);font-size:30px;font-weight:bold;color:#ffe066;text-shadow:0 0 20px rgba(255,220,80,.8);opacity:0;transition:opacity .3s,transform .3s;letter-spacing:3px;pointer-events:none;text-align:center;white-space:nowrap}
@@ -54,48 +56,14 @@ canvas#gameCanvas{display:block;width:100%;height:100%}
 #adminInput{display:inline-block;min-width:200px;padding:8px 24px;font-size:24px;font-weight:bold;color:#00ffcc;letter-spacing:6px;background:rgba(0,255,204,0.1);border:2px solid #00ffcc;border-radius:4px;margin-bottom:14px;min-height:52px;line-height:44px;text-align:center}
 #adminFeedback{font-size:16px;letter-spacing:3px;height:24px;margin-bottom:16px;font-weight:bold}
 #adminHint{font-size:12px;color:#2a8a70;letter-spacing:2px}
-
-/* ★ 服务器大厅 UI */
-#serverLobby {
-  margin-top: 25px;
-  width: 480px;
-  background: rgba(0,0,0,0.6);
-  border: 2px solid #00ffcc;
-  border-radius: 8px;
-  padding: 15px;
-  box-shadow: 0 0 20px rgba(0,255,204,0.2);
-  max-height: 200px;
-  overflow-y: auto;
-}
-#serverLobby h3 {
-  color: #00ffcc;
-  font-size: 16px;
-  letter-spacing: 4px;
-  margin-bottom: 12px;
-  border-bottom: 1px dashed #2a8a70;
-  padding-bottom: 8px;
-  text-align: left;
-}
-.lobby-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px;
-  margin-bottom: 8px;
-  background: rgba(0,255,204,0.05);
-  border: 1px solid #2a8a70;
-  border-radius: 4px;
-  transition: all 0.2s;
-}
+#serverLobby { margin-top: 25px; width: 480px; background: rgba(0,0,0,0.6); border: 2px solid #00ffcc; border-radius: 8px; padding: 15px; box-shadow: 0 0 20px rgba(0,255,204,0.2); max-height: 200px; overflow-y: auto; }
+#serverLobby h3 { color: #00ffcc; font-size: 16px; letter-spacing: 4px; margin-bottom: 12px; border-bottom: 1px dashed #2a8a70; padding-bottom: 8px; text-align: left; }
+.lobby-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; margin-bottom: 8px; background: rgba(0,255,204,0.05); border: 1px solid #2a8a70; border-radius: 4px; transition: all 0.2s; }
 .lobby-item:hover { background: rgba(0,255,204,0.15); border-color: #00ffcc; }
 .lobby-code { font-size: 18px; font-weight: bold; color: #fff; letter-spacing: 2px; }
 .lobby-count { font-size: 14px; color: #8fe07a; margin-left: 15px; }
-.lobby-join-btn {
-  background: #00ffcc; color: #000; border: none; padding: 6px 15px;
-  font-weight: bold; font-family: inherit; cursor: pointer; border-radius: 3px; letter-spacing: 1px;
-}
+.lobby-join-btn { background: #00ffcc; color: #000; border: none; padding: 6px 15px; font-weight: bold; font-family: inherit; cursor: pointer; border-radius: 3px; letter-spacing: 1px; }
 .lobby-join-btn:hover { background: #fff; }
-
 .screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:30;background:radial-gradient(circle at 50% 40%,rgba(20,50,35,.4),rgba(0,0,0,.93) 75%),#050a06;text-align:center;padding:20px}
 .screen.hidden{display:none}
 .screen h1{font-size:62px;letter-spacing:10px;color:#c9f0a8;text-shadow:0 0 12px rgba(120,255,140,.8),0 0 40px rgba(80,200,90,.5);margin-bottom:6px}
@@ -131,6 +99,7 @@ canvas#gameCanvas{display:block;width:100%;height:100%}
     <span>📓 <span id="hudNotebooks">Notebooks</span> <span id="nbCount">0</span> / 7</span>
     <span id="ammoDisplay">🔫 0 <span id="hudShots">shots</span></span>
     <span id="adminBadge" style="display:none;color:#ffd700;font-weight:bold;text-shadow:0 0 10px #ffd700">👑 ADMIN</span>
+    <button id="exitRoomBtn">退出 (Q)</button>
   </div>
   <div id="batteryContainer"><div id="batteryBar"></div></div>
   <div id="netStatus">⚪ Single Player</div>
@@ -191,7 +160,6 @@ canvas#gameCanvas{display:block;width:100%;height:100%}
   </div>
   <div id="roomHint">Players with the same room code enter the same maze</div>
   
-  <!-- ★ 大厅列表 -->
   <div id="serverLobby" style="display:none;">
     <h3>🌐 SERVER LOBBY (点击加入)</h3>
     <div id="lobbyList"></div>
@@ -405,11 +373,9 @@ function randomRoomCode(){ var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; var s
 if(roomRandom) roomRandom.addEventListener('click', function(){ if(roomInput) roomInput.value = randomRoomCode(); });
 if(roomInput) roomInput.value = randomRoomCode();
 
-// ★ 队友渲染：如果是 Admin，渲染成金色发光小人
 function addOtherPlayer(data){
   if(!data || !data.id || otherPlayers[data.id]) return;
   var group = new THREE.Group();
-  
   var isAdmin = !!data.isAdmin;
   var bodyColor = isAdmin ? 0xffd700 : 0x3b82f6; 
   var emissiveColor = isAdmin ? 0x885500 : 0x1a3a80;
@@ -434,7 +400,6 @@ function setupSocketListeners(){
   socket.on('connect', function(){ setNetStatus(true); clearOtherPlayers(); });
   socket.on('disconnect', function(){ clearOtherPlayers(); });
   
-  // ★ 接收服务器大厅列表
   socket.on('roomListUpdate', function(list){
     if (Game.state !== 'menu') return; 
     if (!Game.online) return;
@@ -773,6 +738,12 @@ document.addEventListener('keydown', function(e){
     if(e.key.length === 1 && !e.ctrlKey && !e.altKey) { Game.adminInput += e.key.toLowerCase(); adminInputEl.textContent = Game.adminInput; e.preventDefault(); return; }
     return;
   }
+  
+  if(e.code === 'KeyQ' && Game.state === 'playing' && !Game.mapOpen && !Game.isEasterEgg) {
+    returnToLobby();
+    return;
+  }
+
   keys[e.code] = true;
   if(e.code === 'KeyM' && Game.state === 'playing' && !Game.mapOpen){ Game.mapOpen = true; mapOverlay.classList.add('open'); SoundFX.mapOpen(); }
   if(e.code === 'KeyE' && Game.state === 'playing' && Game.nearbySafe){ 
@@ -878,7 +849,7 @@ function closeAdminModal(){
 function submitAdminPassword(){
   if (Game.adminInput === 'admin') {
     Game.isAdmin = true;
-    localStorage.setItem('mazeAdminMode', 'true'); 
+    sessionStorage.setItem('mazeAdminMode', 'true'); // ★ 改为 sessionStorage，隔离标签页
     adminFeedbackEl.textContent = '✓ ACCESS GRANTED';
     adminFeedbackEl.style.color = '#00ffcc';
     SoundFX.adminSuccess();
@@ -1006,7 +977,8 @@ var clock = null;
 function startGame(){
   Game.state = 'playing'; Game.time = 0; Game.notebooksFound = 0; Game.mapOpen = false; Game.ammo = 0; Game.battery = 100; Game.isStunned = false; 
   
-  Game.isAdmin = localStorage.getItem('mazeAdminMode') === 'true';
+  // ★ 改为读取 sessionStorage
+  Game.isAdmin = sessionStorage.getItem('mazeAdminMode') === 'true';
   if (Game.isAdmin) {
     adminBadge.style.display = 'inline';
     flashlight.color.setHex(0x00ffcc);
@@ -1029,7 +1001,7 @@ function startGame(){
   
   SoundFX.startDrone(); nbCountEl.textContent = '0'; if(!clock) clock = new THREE.Clock(); clock.getDelta();
   hideAllScreens(); 
-  serverLobby.style.display = 'none'; // 开始游戏后隐藏大厅
+  serverLobby.style.display = 'none';
   
   if (Game.isEasterEgg) {
     showToast(Game.isAdmin ? "👑 管理员已登录" : "✨ 欢迎来到开发者安全屋 ✨", 3.0);
@@ -1038,16 +1010,15 @@ function startGame(){
   }
 }
 
-// ★ 返回大厅逻辑
+// ★ 修复返回大厅逻辑：主动通知服务器清理房间，刷新大厅
 function returnToLobby() {
   Game.state = 'menu';
   Game.isEasterEgg = false;
   
-  // 清理场景和玩家
   clearOtherPlayers();
   
-  // 断开并重连，触发服务器刷新列表
   if (socket) {
+    safeEmit('leaveRoom'); // 告诉服务器我退出了
     socket.disconnect();
     socket.connect();
   }
@@ -1056,7 +1027,6 @@ function returnToLobby() {
   startScreen.classList.remove('hidden');
   serverLobby.style.display = 'block';
 
-  // 恢复 UI
   document.getElementById('stunOverlay').style.opacity = '0';
   adminModal.classList.remove('open');
   puzzleModal.classList.remove('open');
@@ -1073,6 +1043,11 @@ pauseScreen.addEventListener('click', function(e){
 });
 document.getElementById('pauseLobbyBtn').addEventListener('click', returnToLobby);
 document.getElementById('endLobbyBtn').addEventListener('click', returnToLobby);
+
+document.getElementById('exitRoomBtn').addEventListener('click', function(e) {
+  e.stopPropagation();
+  returnToLobby();
+});
 
 function animate(){
   requestAnimationFrame(animate); if(!clock) clock = new THREE.Clock(); var dt = Math.min(clock.getDelta(), 0.05);
